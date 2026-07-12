@@ -1,8 +1,6 @@
 package com.example;
 
 import jakarta.validation.Valid;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -27,39 +25,35 @@ public class UserController {
 
     @GetMapping
     @Operation(summary = "Get all users with pagination")
-    public Page<User> getAll(@PageableDefault(size = 10) Pageable pageable) {
+    public Page<UserResponse> getAll(@PageableDefault(size = 10) Pageable pageable) {
         log.info("Fetching users with pagination: {}", pageable);
-        return userService.getAll(pageable);
+        return userService.getAll(pageable).map(UserResponse::from);
     }
 
     @GetMapping("/{id}")
-    @Cacheable(value = "user", key = "#id")
     @Operation(summary = "Get user by ID")
-    public User getById(@PathVariable Long id) {
+    public UserResponse getById(@PathVariable Long id) {
         log.info("Fetching user with id: {}", id);
-        return userService.getById(id);
+        return UserResponse.from(userService.getById(id));
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @CacheEvict(value = "user", allEntries = true)
     @Operation(summary = "Create new user")
-    public User create(@Valid @RequestBody User user) {
+    public UserResponse create(@Valid @RequestBody UserRequest request) {
         log.info("Creating user");
-        return userService.create(user);
+        return UserResponse.from(userService.create(request));
     }
 
     @PutMapping("/{id}")
-    @CacheEvict(value = "user", key = "#id")
     @Operation(summary = "Update user")
-    public User update(@PathVariable Long id, @Valid @RequestBody User user) {
+    public UserResponse update(@PathVariable Long id, @Valid @RequestBody UserRequest request) {
         log.info("Updating user with id: {}", id);
-        return userService.update(id, user);
+        return UserResponse.from(userService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @CacheEvict(value = "user", key = "#id")
     @Operation(summary = "Delete user")
     public void delete(@PathVariable Long id) {
         log.info("Deleting user with id: {}", id);
@@ -68,15 +62,20 @@ public class UserController {
 
     @GetMapping("/search")
     @Operation(summary = "Search users by name")
-    public List<User> search(@RequestParam String name) {
+    public List<UserResponse> search(@RequestParam String name) {
+        if (name.isBlank()) {
+            throw new IllegalArgumentException("Search parameter 'name' must not be blank");
+        }
         log.info("Searching users by name");
-        return userService.searchByName(name);
+        return userService.searchByName(name).stream()
+                .map(UserResponse::from)
+                .toList();
     }
 
     @GetMapping("/email/{email}")
     @Operation(summary = "Get user by email")
-    public User getByEmail(@PathVariable String email) {
+    public UserResponse getByEmail(@PathVariable String email) {
         log.info("Fetching user by email");
-        return userService.findByEmail(email);
+        return UserResponse.from(userService.findByEmail(email));
     }
 }
