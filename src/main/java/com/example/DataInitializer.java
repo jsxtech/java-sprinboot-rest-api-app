@@ -1,9 +1,12 @@
 package com.example;
 
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
+@Profile("dev")
 public class DataInitializer implements CommandLineRunner {
     private final UserRepository userRepository;
 
@@ -12,6 +15,7 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     @Override
+    @Transactional
     public void run(String... args) {
         if (userRepository.count() > 0) {
             return;
