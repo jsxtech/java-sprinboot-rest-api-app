@@ -212,14 +212,35 @@ class UserControllerIntegrationTest {
         user.setEmail("findme@example.com");
         userRepository.save(user);
 
-        mockMvc.perform(get("/api/users/email/{email}", "findme@example.com"))
+        mockMvc.perform(get("/api/users/email").param("value", "findme@example.com"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Email User"));
     }
 
     @Test
+    void getByEmail_emailWithDots_returns200() throws Exception {
+        // Regression: emails containing dots must not be truncated (former path-variable bug).
+        User user = new User();
+        user.setName("Dotted User");
+        user.setEmail("first.last@sub.example.co.uk");
+        userRepository.save(user);
+
+        mockMvc.perform(get("/api/users/email").param("value", "first.last@sub.example.co.uk"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Dotted User"))
+                .andExpect(jsonPath("$.email").value("first.last@sub.example.co.uk"));
+    }
+
+    @Test
+    void getByEmail_blankValue_returns400() throws Exception {
+        mockMvc.perform(get("/api/users/email").param("value", "   "))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400));
+    }
+
+    @Test
     void getByEmail_nonExistingEmail_returns404() throws Exception {
-        mockMvc.perform(get("/api/users/email/{email}", "notfound@example.com"))
+        mockMvc.perform(get("/api/users/email").param("value", "notfound@example.com"))
                 .andExpect(status().isNotFound());
     }
 }
