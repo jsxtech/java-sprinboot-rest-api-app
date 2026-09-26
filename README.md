@@ -100,8 +100,9 @@ docker-compose up --build
 - `GET /api/users/{id}` - Get user by ID (cached)
   - Returns: 200 OK or 404 Not Found
 - `GET /api/users/search?name={name}` - Search users by name (case-insensitive)
-- `GET /api/users/email/{email}` - Get user by email
+- `GET /api/users/email?value={email}` - Get user by email
   - Returns: 200 OK or 404 Not Found
+  - Uses a query parameter to safely handle emails containing dots or special characters
 - `POST /api/users` - Create new user
   - Validates: name (required), email (required, valid format, unique)
   - Returns: 201 Created
@@ -128,9 +129,11 @@ docker-compose up --build
 
 ## Sample Data
 
-The application initializes with 2 sample users:
+When the `dev` profile is active (`SPRING_PROFILES_ACTIVE=dev`), the application initializes with 2 sample users:
 - John Doe (john@example.com)
 - Jane Smith (jane@example.com)
+
+No sample data is loaded under the default or `prod` profiles.
 
 ## Configuration
 
