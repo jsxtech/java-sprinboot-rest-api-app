@@ -72,10 +72,13 @@ public class UserController {
                 .toList();
     }
 
-    @GetMapping("/email/{email}")
+    @GetMapping("/email")
     @Operation(summary = "Get user by email")
-    public UserResponse getByEmail(@PathVariable String email) {
+    public UserResponse getByEmail(@RequestParam String value) {
+        if (value.isBlank()) {
+            throw new IllegalArgumentException("Query parameter 'value' must not be blank");
+        }
         log.info("Fetching user by email");
-        return UserResponse.from(userService.findByEmail(email));
+        return UserResponse.from(userService.findByEmail(value));
     }
 }
